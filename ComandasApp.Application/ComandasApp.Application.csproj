@@ -1,8 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\ComandasApp.Domain\ComandasApp.Domain.csproj" />
     <ProjectReference Include="..\ComandasApp.Contracts\ComandasApp.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="12.*" />
   </ItemGroup>
 
   <PropertyGroup>
