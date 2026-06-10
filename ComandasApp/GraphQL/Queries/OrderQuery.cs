@@ -1,6 +1,7 @@
 using ComandasApp.Application.Interfaces.Repositories;
 using ComandasApp.Domain.Entities;
 using HotChocolate.Types;
+using HotChocolate.Data;
 
 namespace ComandasApp.GraphQL.Queries
 {

@@ -1,0 +1,26 @@
+# Configuración básica de Git Ignore para proyectos .NET
+
+# Carpetas de compilación
+[Bb]in/
+[Oo]bj/
+
+# Archivos de usuario y configuraciones locales
+*.user
+*.userosscache
+*.sln.docstates
+appsettings.Development.json
+
+# Visual Studio y Rider
+.vs/
+.idea/
+*.suo
+*.userprefs
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+# Docker
+.dockerignore

@@ -1,0 +1,112 @@
+@page "/kitchen"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<PageTitle>Cocina - Pedidos en Vivo</PageTitle>
+
+<div class="container mt-4">
+    <h2 class="text-primary mb-4"><i class="bi bi-display"></i> Pizarra de Cocina</h2>
+
+    <div class="row">
+        @if (!IsConnected)
+        {
+            <div class="alert alert-warning">
+                Conectando al servidor en tiempo real...
+            </div>
+        }
+        else
+        {
+            @if (orders.Count == 0)
+            {
+                <div class="alert alert-info">No hay pedidos pendientes en este momento.</div>
+            }
+            else
+            {
+                @foreach (var order in orders)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                                <strong>Mesa: @order.TableNumber</strong>
+                                <span class="badge bg-warning text-dark">Nuevo</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">ID: @order.Id</p>
+                                <hr />
+                                <button class="btn btn-success w-100" @onclick="() => CompletarPedido(order.Id)">
+                                    Marcar como Listo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private HubConnection? hubConnection;
+    private List<OrderNotification> orders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Conectar al Hub de SignalR
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/orderhub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        // Escuchar cuando se crea un nuevo pedido
+        hubConnection.On<Guid, string>("OrderCreated", (orderId, tableNumber) =>
+        {
+            orders.Add(new OrderNotification { Id = orderId, TableNumber = tableNumber });
+            InvokeAsync(StateHasChanged);
+        });
+
+        // Escuchar cuando el estado cambia
+        hubConnection.On<Guid, string>("OrderStatusChanged", (orderId, status) =>
+        {
+            // Remover de la pantalla si ya está listo o entregado (logica simple de UI)
+            if (status == "Ready" || status == "Delivered")
+            {
+                var orderToRemove = orders.FirstOrDefault(o => o.Id == orderId);
+                if (orderToRemove != null)
+                {
+                    orders.Remove(orderToRemove);
+                    InvokeAsync(StateHasChanged);
+                }
+            }
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    private void CompletarPedido(Guid orderId)
+    {
+        // Aquí normalmente haríamos una mutación GraphQL para actualizar la base de datos
+        // Por ahora, simulamos que lo sacamos de la pantalla
+        var orderToRemove = orders.FirstOrDefault(o => o.Id == orderId);
+        if (orderToRemove != null)
+        {
+            orders.Remove(orderToRemove);
+        }
+    }
+
+    public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    private class OrderNotification
+    {
+        public Guid Id { get; set; }
+        public string TableNumber { get; set; } = string.Empty;
+    }
+}

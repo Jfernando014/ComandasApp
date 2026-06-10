@@ -1,7 +1,162 @@
-﻿@page "/"
+@page "/"
+@inject HttpClient Http
 
-<PageTitle>Home</PageTitle>
+<PageTitle>ComandasApp - Meseros</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="meseros-container">
+    <div class="glass-panel">
+        <h1 class="title">Toma de Pedidos</h1>
+        <p class="subtitle">Selecciona una mesa y envía la orden a cocina.</p>
 
-Welcome to your new app.
+        <div class="input-group mb-4">
+            <span class="input-group-text bg-dark text-white border-0"><i class="bi bi-grid-3x3"></i> Mesa N°</span>
+            <input type="text" class="form-control table-input" @bind="mesa" placeholder="Ej: 5" />
+        </div>
+
+        <button class="btn-premium" @onclick="SimularPedido" disabled="@isSubmitting">
+            @if (isSubmitting)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span> Enviando...</span>
+            }
+            else
+            {
+                <i class="bi bi-send-fill"></i> <span>Enviar Pedido a Cocina</span>
+            }
+        </button>
+
+        @if (message != null)
+        {
+            <div class="alert alert-success mt-4 animate-fade-in">
+                @message
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .meseros-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
+        border-radius: 20px;
+        padding: 2rem;
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 3rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 500px;
+        width: 100%;
+        color: white;
+    }
+
+    .title {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: -webkit-linear-gradient(#fff, #a5a5b0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+        color: #a5a5b0;
+        margin-bottom: 2rem;
+    }
+
+    .table-input {
+        background: rgba(0,0,0,0.2) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: white !important;
+        font-size: 1.2rem;
+        text-align: center;
+    }
+    .table-input:focus {
+        box-shadow: 0 0 10px rgba(100, 150, 255, 0.5) !important;
+    }
+
+    .btn-premium {
+        background: linear-gradient(90deg, #ff416c 0%, #ff4b2b 100%);
+        border: none;
+        border-radius: 30px;
+        padding: 15px 30px;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+        width: 100%;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(255, 65, 108, 0.4);
+    }
+    
+    .btn-premium:active {
+        transform: translateY(0);
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+@code {
+    private string mesa = "";
+    private string? message;
+    private bool isSubmitting;
+
+    private async Task SimularPedido()
+    {
+        if (string.IsNullOrWhiteSpace(mesa)) return;
+
+        isSubmitting = true;
+        
+        // Simular petición GraphQL cruda mediante HttpClient
+        var query = new
+        {
+            query = "mutation { createOrder(input: { tableNumber: \"" + mesa + "\", customerName: \"Mesa " + mesa + "\", items: [ { productId: \"00000000-0000-0000-0000-000000000000\", quantity: 1, unitPrice: 15.5 } ] }) }"
+        };
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/graphql", query);
+            if (response.IsSuccessStatusCode)
+            {
+                message = $"¡Pedido de Mesa {mesa} enviado a la cocina!";
+                mesa = "";
+            }
+            else
+            {
+                message = "Error al enviar el pedido.";
+            }
+        }
+        catch(Exception)
+        {
+            message = "Error de red al enviar el pedido.";
+        }
+        
+        isSubmitting = false;
+
+        // Ocultar mensaje después de unos segundos
+        await Task.Delay(3000);
+        message = null;
+        StateHasChanged();
+    }
+}

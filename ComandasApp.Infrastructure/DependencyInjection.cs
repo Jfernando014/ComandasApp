@@ -1,4 +1,5 @@
 using ComandasApp.Application.Interfaces.Repositories;
+using ComandasApp.Infrastructure.Persistence;
 using ComandasApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
