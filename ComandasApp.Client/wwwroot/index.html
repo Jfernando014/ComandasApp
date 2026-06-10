@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 
 <head>
     <meta charset="utf-8" />
@@ -7,14 +7,44 @@
     <title>ComandasApp.Client</title>
     <base href="/" />
     <link rel="preload" id="webassembly" />
-    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="ComandasApp.Client.styles.css" rel="stylesheet" />
+
+    <!-- Tailwind & Google Fonts from Stitch Prototype -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@500;600&display=swap" rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#f8f9f9", "surface-variant": "#e1e3e3", "secondary": "#58605f", "surface-container-high": "#e7e8e8",
+                        "on-secondary-fixed": "#151d1c", "on-error": "#ffffff", "tertiary-container": "#883c1a", "on-secondary-fixed-variant": "#404847",
+                        "on-primary": "#ffffff", "on-surface-variant": "#404847", "inverse-on-surface": "#f0f1f1", "inverse-surface": "#2e3131",
+                        "surface-container-lowest": "#ffffff", "on-surface": "#191c1c", "surface-bright": "#f8f9f9", "on-secondary-container": "#5c6463",
+                        "secondary-fixed": "#dce4e2", "on-primary-container": "#a1cfca", "surface-container-highest": "#e1e3e3", "on-tertiary": "#ffffff",
+                        "tertiary": "#6a2605", "on-background": "#191c1c", "on-tertiary-fixed-variant": "#78310f", "on-primary-fixed-variant": "#204e4a",
+                        "secondary-container": "#d9e1df", "primary": "#12423f", "error": "#ba1a1a", "on-secondary": "#ffffff", "secondary-fixed-dim": "#c0c8c6",
+                        "on-tertiary-fixed": "#370e00", "surface-container-low": "#f3f4f4", "on-primary-fixed": "#00201e", "tertiary-fixed-dim": "#ffb598",
+                        "error-container": "#ffdad6", "on-error-container": "#93000a", "background": "#f8f9f9", "inverse-primary": "#a1cfca",
+                        "surface-container": "#edeeee", "outline": "#707977", "surface-dim": "#d9dada", "primary-fixed-dim": "#a1cfca",
+                        "primary-container": "#2d5a56", "outline-variant": "#c0c8c6", "on-tertiary-container": "#ffb598", "tertiary-fixed": "#ffdbce",
+                        "surface-tint": "#396662", "primary-fixed": "#bcece6"
+                    },
+                    "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    "spacing": { "container-padding": "24px", "unit": "8px", "gutter": "16px", "sidebar-width": "280px" },
+                    "fontFamily": { "headline-md": ["Outfit"], "body-md": ["Inter"], "display-lg": ["Outfit"], "label-sm": ["Inter"], "body-lg": ["Inter"], "display-lg-mobile": ["Outfit"] },
+                    "fontSize": { "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}], "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}], "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}], "label-sm": ["13px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}], "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}], "display-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}] }
+                }
+            }
+        }
+    </script>
     <script type="importmap"></script>
 </head>
 
-<body>
+<body class="bg-background text-on-background font-body-md">
     <div id="app">
         <svg class="loading-progress">
             <circle r="40%" cx="50%" cy="50%" />

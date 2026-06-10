@@ -1,162 +1,152 @@
 @page "/"
+@layout ComandasApp.Client.Layout.EmptyLayout
 @inject HttpClient Http
 
-<PageTitle>ComandasApp - Meseros</PageTitle>
+<PageTitle>ComandasApp</PageTitle>
 
-<div class="meseros-container">
-    <div class="glass-panel">
-        <h1 class="title">Toma de Pedidos</h1>
-        <p class="subtitle">Selecciona una mesa y envía la orden a cocina.</p>
+<div class="min-h-screen flex flex-col pb-[80px] md:pb-0">
+    <!-- TopAppBar -->
+    <header class="w-full top-0 sticky bg-surface shadow-sm flex justify-between items-center px-container-padding py-unit w-full max-w-full z-40">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden border border-outline-variant flex items-center justify-center text-on-surface-variant">
+                <span class="material-symbols-outlined" data-icon="person">person</span>
+            </div>
+            <div>
+                <h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">ComandasApp</h1>
+            </div>
+        </div>
+        <button aria-label="Search" class="text-primary hover:bg-surface-container-low transition-colors active:scale-95 duration-150 p-2 rounded-full flex items-center justify-center">
+            <span class="material-symbols-outlined" data-icon="search">settings</span>
+        </button>
+    </header>
 
-        <div class="input-group mb-4">
-            <span class="input-group-text bg-dark text-white border-0"><i class="bi bi-grid-3x3"></i> Mesa N°</span>
-            <input type="text" class="form-control table-input" @bind="mesa" placeholder="Ej: 5" />
+    <section class="px-container-padding py-4 flex justify-between items-center bg-surface">
+        <div class="flex flex-col">
+            <h2 class="font-headline-md text-[24px] font-bold text-on-surface">Mesas</h2>
+            <p class="font-body-md text-on-surface-variant">Mapeo de mesas</p>
+        </div>
+        <button class="flex items-center gap-2 px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors">
+            <span class="material-symbols-outlined text-[20px]">filter_list</span>
+            <span class="font-label-sm">Filtrar</span>
+        </button>
+    </section>
+
+    <!-- Main Content -->
+    <main class="flex-grow p-container-padding grid grid-cols-2 gap-4 max-w-7xl mx-auto w-full">
+        <!-- Mesa Libre (Ejemplo con lógica dinámica) -->
+        <div class="bg-surface-container-lowest rounded-xl border border-surface-variant p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col justify-between hover:shadow-[0px_10px_30px_rgba(0,0,0,0.08)] transition-shadow opacity-70 relative overflow-hidden aspect-square cursor-pointer group"
+             @onclick="() => SeleccionarMesa(10)">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-outline-variant"></div>
+            <div class="flex justify-between items-start z-10 pl-2">
+                <span class="font-headline-md text-headline-md text-on-surface-variant leading-none">M10</span>
+                <div class="px-2 py-1 rounded border border-transparent">
+                    <span class="font-label-sm text-label-sm text-outline">Libre</span>
+                </div>
+            </div>
+            <div class="flex-1 flex items-center justify-center z-10 pl-2">
+                <span class="material-symbols-outlined text-[40px] text-surface-container-high group-hover:text-surface-variant transition-colors">table_restaurant</span>
+            </div>
+            <div class="mt-auto pt-3 border-t border-surface-container-high z-10 flex justify-center pl-2">
+                <span class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary transition-colors">Simular Pedido M10</span>
+            </div>
         </div>
 
-        <button class="btn-premium" @onclick="SimularPedido" disabled="@isSubmitting">
-            @if (isSubmitting)
-            {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span> Enviando...</span>
-            }
-            else
-            {
-                <i class="bi bi-send-fill"></i> <span>Enviar Pedido a Cocina</span>
-            }
-        </button>
-
-        @if (message != null)
-        {
-            <div class="alert alert-success mt-4 animate-fade-in">
-                @message
+        <!-- Mesa Activa (Ejemplo estático) -->
+        <div class="bg-secondary-container rounded-xl border border-primary p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col justify-between relative overflow-hidden aspect-square cursor-pointer group ring-2 ring-primary ring-opacity-50">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary"></div>
+            <div class="absolute -left-2 top-0 bottom-0 w-4 bg-primary blur-md opacity-30"></div>
+            <div class="flex justify-between items-start z-10 pl-2">
+                <span class="font-headline-md text-headline-md text-on-secondary-container leading-none">M5</span>
+                <div class="bg-primary px-2 py-1 rounded border border-primary-container">
+                    <span class="font-label-sm text-label-sm text-on-primary">Pidiendo</span>
+                </div>
             </div>
-        }
-    </div>
+            <div class="flex items-center gap-2 z-10 pl-2 mt-2">
+                <span class="material-symbols-outlined text-on-secondary-container opacity-70 text-[20px]">group</span>
+                <span class="font-body-md text-body-md text-on-secondary-container">3 Pax</span>
+            </div>
+            <div class="mt-auto pt-3 border-t border-primary z-10 flex justify-between items-center pl-2">
+                <span class="font-label-sm text-label-sm text-on-secondary-container font-bold">3 Ítems</span>
+                <button class="bg-primary text-on-primary px-3 py-2 rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+                    Revisar
+                </button>
+            </div>
+        </div>
+    </main>
+
+    @if (mesaSeleccionada != null)
+    {
+        <!-- Floating Summary Card (Draft Order) -->
+        <div class="fixed bottom-[80px] md:bottom-container-padding right-container-padding left-container-padding md:left-auto md:w-[400px] z-50">
+            <div class="bg-surface-container-lowest rounded-xl border border-surface-variant p-4 shadow-[0px_10px_30px_rgba(0,0,0,0.12)] flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-primary-container text-on-primary-container rounded-lg flex items-center justify-center">
+                        <span class="material-symbols-outlined font-bold" data-icon="edit_document">edit_document</span>
+                    </div>
+                    <div>
+                        <h3 class="font-headline-md text-body-lg font-bold text-on-surface leading-tight">Mesa @mesaSeleccionada</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant">Nueva Orden Lista</p>
+                    </div>
+                </div>
+                <button @onclick="EnviarPedidoACocina" class="bg-primary text-on-primary font-label-sm text-label-sm px-6 py-3 rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors min-h-[48px] shadow-sm active:scale-95 duration-150">
+                    @if(isSubmitting) {
+                        <span>Enviando...</span>
+                    } else {
+                        <span>Enviar a Cocina</span>
+                    }
+                </button>
+            </div>
+        </div>
+    }
+
+    <!-- BottomNavBar (Mobile Only) -->
+    <nav class="bg-surface text-primary font-label-sm text-label-sm fixed bottom-0 w-full rounded-t-xl z-50 shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe md:hidden">
+        <button class="flex flex-col items-center justify-center text-on-secondary-fixed-variant px-6 py-2 hover:bg-surface-container-high active:scale-90 transition-transform">
+            <span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+            <span class="mt-1">Pedidos</span>
+        </button>
+        <button class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-6 py-2 hover:bg-surface-container-high active:scale-90 transition-transform">
+            <span class="material-symbols-outlined" data-icon="table_restaurant">table_restaurant</span>
+            <span class="mt-1">Mesas</span>
+        </button>
+        <button class="flex flex-col items-center justify-center text-on-secondary-fixed-variant px-6 py-2 hover:bg-surface-container-high active:scale-90 transition-transform">
+            <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+            <span class="mt-1">Alertas</span>
+        </button>
+    </nav>
 </div>
 
-<style>
-    .meseros-container {
-        min-height: 80vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
-        border-radius: 20px;
-        padding: 2rem;
-    }
-
-    .glass-panel {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 3rem;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        text-align: center;
-        max-width: 500px;
-        width: 100%;
-        color: white;
-    }
-
-    .title {
-        font-family: 'Inter', sans-serif;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        background: -webkit-linear-gradient(#fff, #a5a5b0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .subtitle {
-        color: #a5a5b0;
-        margin-bottom: 2rem;
-    }
-
-    .table-input {
-        background: rgba(0,0,0,0.2) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        color: white !important;
-        font-size: 1.2rem;
-        text-align: center;
-    }
-    .table-input:focus {
-        box-shadow: 0 0 10px rgba(100, 150, 255, 0.5) !important;
-    }
-
-    .btn-premium {
-        background: linear-gradient(90deg, #ff416c 0%, #ff4b2b 100%);
-        border: none;
-        border-radius: 30px;
-        padding: 15px 30px;
-        color: white;
-        font-weight: 600;
-        font-size: 1.1rem;
-        letter-spacing: 0.5px;
-        width: 100%;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .btn-premium:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(255, 65, 108, 0.4);
-    }
-    
-    .btn-premium:active {
-        transform: translateY(0);
-    }
-
-    .animate-fade-in {
-        animation: fadeIn 0.5s ease-in-out;
-    }
-
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
-
 @code {
-    private string mesa = "";
-    private string? message;
-    private bool isSubmitting;
+    private int? mesaSeleccionada = null;
+    private bool isSubmitting = false;
 
-    private async Task SimularPedido()
+    private void SeleccionarMesa(int numeroMesa)
     {
-        if (string.IsNullOrWhiteSpace(mesa)) return;
+        mesaSeleccionada = numeroMesa;
+    }
+
+    private async Task EnviarPedidoACocina()
+    {
+        if (mesaSeleccionada == null) return;
 
         isSubmitting = true;
         
         // Simular petición GraphQL cruda mediante HttpClient
         var query = new
         {
-            query = "mutation { createOrder(input: { tableNumber: \"" + mesa + "\", customerName: \"Mesa " + mesa + "\", items: [ { productId: \"00000000-0000-0000-0000-000000000000\", quantity: 1, unitPrice: 15.5 } ] }) }"
+            query = "mutation { createOrder(input: { tableNumber: \"" + mesaSeleccionada.ToString() + "\", customerName: \"Mesa " + mesaSeleccionada + "\", items: [ { productId: \"00000000-0000-0000-0000-000000000000\", quantity: 1, unitPrice: 15.5 } ] }) }"
         };
 
         try
         {
-            var response = await Http.PostAsJsonAsync("/graphql", query);
-            if (response.IsSuccessStatusCode)
-            {
-                message = $"¡Pedido de Mesa {mesa} enviado a la cocina!";
-                mesa = "";
-            }
-            else
-            {
-                message = "Error al enviar el pedido.";
-            }
+            await Http.PostAsJsonAsync("/graphql", query);
         }
         catch(Exception)
         {
-            message = "Error de red al enviar el pedido.";
+            // Error handling simulado
         }
         
         isSubmitting = false;
-
-        // Ocultar mensaje después de unos segundos
-        await Task.Delay(3000);
-        message = null;
-        StateHasChanged();
+        mesaSeleccionada = null; // Cerramos el panel flotante
     }
 }
