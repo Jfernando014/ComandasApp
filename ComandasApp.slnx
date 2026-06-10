@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="ComandasApp.Application/ComandasApp.Application.csproj" />
+  <Project Path="ComandasApp.Client/ComandasApp.Client.csproj" />
+  <Project Path="ComandasApp.Contracts/ComandasApp.Contracts.csproj" />
+  <Project Path="ComandasApp.Domain/ComandasApp.Domain.csproj" />
+  <Project Path="ComandasApp.Infrastructure/ComandasApp.Infrastructure.csproj" />
+  <Project Path="ComandasApp.Test/ComandasApp.Test.csproj" />
+  <Project Path="ComandasApp/ComandasApp.csproj" />
+</Solution>

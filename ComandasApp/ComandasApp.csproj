@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ComandasApp.Application\ComandasApp.Application.csproj" />
+    <ProjectReference Include="..\ComandasApp.Client\ComandasApp.Client.csproj" />
+    <ProjectReference Include="..\ComandasApp.Contracts\ComandasApp.Contracts.csproj" />
+    <ProjectReference Include="..\ComandasApp.Domain\ComandasApp.Domain.csproj" />
+    <ProjectReference Include="..\ComandasApp.Infrastructure\ComandasApp.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>
