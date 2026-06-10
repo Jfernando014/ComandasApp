@@ -62,4 +62,19 @@ app.MapHub<OrderHub>("/orderhub");
 // Fallback para SPA Blazor WebAssembly
 app.MapFallbackToFile("index.html");
 
+// --- Seed de prueba para el MVP ---
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ComandasApp.Infrastructure.Persistence.ComandasDbContext>();
+    try 
+    {
+        Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(
+            context.Database, 
+            "INSERT INTO \"Products\" (\"Id\", \"Name\", \"Description\", \"Price\", \"IsAvailable\") VALUES ('00000000-0000-0000-0000-000000000000', 'Hamburguesa Clásica', 'Deliciosa', 15.5, true) ON CONFLICT DO NOTHING;"
+        );
+    }
+    catch { /* Ignorar si aún no hay tablas creadas */ }
+}
+// ----------------------------------
+
 app.Run();
