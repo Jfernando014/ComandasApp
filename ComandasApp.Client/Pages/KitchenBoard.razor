@@ -1,49 +1,112 @@
 @page "/kitchen"
+@layout ComandasApp.Client.Layout.EmptyLayout
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
 @implements IAsyncDisposable
 
-<PageTitle>Cocina - Pedidos en Vivo</PageTitle>
+<PageTitle>Cocina - KDS Móvil</PageTitle>
 
-<div class="container mt-4">
-    <h2 class="text-primary mb-4"><i class="bi bi-display"></i> Pizarra de Cocina</h2>
+<div class="bg-surface text-on-surface font-body min-h-screen flex flex-col antialiased">
+    <!-- TopAppBar -->
+    <header class="w-full top-0 sticky bg-surface-container-lowest shadow-sm flex justify-between items-center px-4 py-3 z-40 border-b border-surface-variant">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">soup_kitchen</span>
+            </div>
+            <div>
+                <h1 class="font-headline text-[20px] font-semibold text-primary leading-tight">Cocina en Vivo</h1>
+                <p class="font-label text-[12px] text-on-surface-variant flex items-center gap-1">
+                    @if (IsConnected)
+                    {
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span>Sincronizado</span>
+                    }
+                    else
+                    {
+                        <span class="w-2 h-2 rounded-full bg-error"></span>
+                        <span>Desconectado</span>
+                    }
+                </p>
+            </div>
+        </div>
+    </header>
 
-    <div class="row">
-        @if (!IsConnected)
+    <!-- Main Content -->
+    <main class="flex-grow p-4 overflow-y-auto space-y-6">
+        @if (orders.Count == 0)
         {
-            <div class="alert alert-warning">
-                Conectando al servidor en tiempo real...
+            <div class="h-64 flex flex-col items-center justify-center text-center opacity-60">
+                <span class="material-symbols-outlined text-[64px] mb-4">check_circle</span>
+                <h2 class="text-[18px] font-medium">Todo bajo control</h2>
+                <p class="text-[14px]">No hay pedidos pendientes</p>
             </div>
         }
         else
         {
-            @if (orders.Count == 0)
+            <!-- Sección: Nuevos Pedidos -->
+            var nuevosPedidos = orders.Where(o => o.Status == "Nuevo").ToList();
+            if (nuevosPedidos.Any())
             {
-                <div class="alert alert-info">No hay pedidos pendientes en este momento.</div>
-            }
-            else
-            {
-                @foreach (var order in orders)
-                {
-                    <div class="col-md-4 mb-3">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                                <strong>Mesa: @order.TableNumber</strong>
-                                <span class="badge bg-warning text-dark">Nuevo</span>
+                <section>
+                    <h3 class="font-headline font-semibold text-on-surface mb-3 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-error"></span>
+                        Recién Llegados (@nuevosPedidos.Count)
+                    </h3>
+                    <div class="space-y-4">
+                        @foreach (var order in nuevosPedidos)
+                        {
+                            <div class="bg-surface-container-lowest rounded-xl border-l-4 border-l-error shadow-sm p-4 relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-headline text-[18px] font-bold">Mesa @order.TableNumber</h4>
+                                    <span class="bg-error-container text-on-error-container px-2 py-1 rounded-md text-[12px] font-semibold">URGENTE</span>
+                                </div>
+                                <div class="space-y-2 mb-4">
+                                    <div class="flex gap-2 items-start text-[14px]">
+                                        <span class="font-medium">1x</span>
+                                        <span>Hamburguesa (Ejemplo)</span>
+                                    </div>
+                                    <p class="text-[12px] text-outline italic">Sin cebolla, extra queso</p>
+                                </div>
+                                <button class="w-full bg-error text-on-error py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-error/90 transition-colors" @onclick='() => CambiarEstado(order.Id, "Preparando")'>
+                                    <span class="material-symbols-outlined">skillet</span>
+                                    Comenzar a Preparar
+                                </button>
                             </div>
-                            <div class="card-body">
-                                <p class="card-text">ID: @order.Id</p>
-                                <hr />
-                                <button class="btn btn-success w-100" @onclick="() => CompletarPedido(order.Id)">
+                        }
+                    </div>
+                </section>
+            }
+
+            <!-- Sección: En Preparación -->
+            var preparandoPedidos = orders.Where(o => o.Status == "Preparando").ToList();
+            if (preparandoPedidos.Any())
+            {
+                <section>
+                    <h3 class="font-headline font-semibold text-on-surface mb-3 flex items-center gap-2 mt-6">
+                        <span class="w-3 h-3 rounded-full bg-primary"></span>
+                        En Preparación (@preparandoPedidos.Count)
+                    </h3>
+                    <div class="space-y-4">
+                        @foreach (var order in preparandoPedidos)
+                        {
+                            <div class="bg-surface-container-lowest rounded-xl border-l-4 border-l-primary shadow-sm p-4 relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-headline text-[18px] font-bold">Mesa @order.TableNumber</h4>
+                                    <span class="bg-primary-container text-on-primary-container px-2 py-1 rounded-md text-[12px] font-semibold flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[14px] animate-spin">sync</span> Preparando
+                                    </span>
+                                </div>
+                                <button class="w-full bg-primary text-on-primary py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-colors" @onclick='() => CambiarEstado(order.Id, "Listo")'>
+                                    <span class="material-symbols-outlined">done_all</span>
                                     Marcar como Listo
                                 </button>
                             </div>
-                        </div>
+                        }
                     </div>
-                }
+                </section>
             }
         }
-    </div>
+    </main>
 </div>
 
 @code {
@@ -52,45 +115,51 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Conectar al Hub de SignalR
         hubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/orderhub"))
             .WithAutomaticReconnect()
             .Build();
 
-        // Escuchar cuando se crea un nuevo pedido
         hubConnection.On<Guid, string>("OrderCreated", (orderId, tableNumber) =>
         {
-            orders.Add(new OrderNotification { Id = orderId, TableNumber = tableNumber });
+            orders.Add(new OrderNotification { Id = orderId, TableNumber = tableNumber, Status = "Nuevo" });
             InvokeAsync(StateHasChanged);
         });
 
-        // Escuchar cuando el estado cambia
         hubConnection.On<Guid, string>("OrderStatusChanged", (orderId, status) =>
         {
-            // Remover de la pantalla si ya está listo o entregado (logica simple de UI)
-            if (status == "Ready" || status == "Delivered")
+            var order = orders.FirstOrDefault(o => o.Id == orderId);
+            if (order != null)
             {
-                var orderToRemove = orders.FirstOrDefault(o => o.Id == orderId);
-                if (orderToRemove != null)
+                if (status == "Ready" || status == "Delivered")
                 {
-                    orders.Remove(orderToRemove);
-                    InvokeAsync(StateHasChanged);
+                    orders.Remove(order);
                 }
+                else
+                {
+                    order.Status = status;
+                }
+                InvokeAsync(StateHasChanged);
             }
         });
 
         await hubConnection.StartAsync();
     }
 
-    private void CompletarPedido(Guid orderId)
+    private void CambiarEstado(Guid orderId, string nuevoEstado)
     {
-        // Aquí normalmente haríamos una mutación GraphQL para actualizar la base de datos
-        // Por ahora, simulamos que lo sacamos de la pantalla
-        var orderToRemove = orders.FirstOrDefault(o => o.Id == orderId);
-        if (orderToRemove != null)
+        // Mutación GraphQL simulada - Actualización Local por ahora
+        var order = orders.FirstOrDefault(o => o.Id == orderId);
+        if (order != null)
         {
-            orders.Remove(orderToRemove);
+            if (nuevoEstado == "Listo")
+            {
+                orders.Remove(order); // Desaparece del tablero cuando está listo
+            }
+            else
+            {
+                order.Status = nuevoEstado;
+            }
         }
     }
 
@@ -108,5 +177,6 @@
     {
         public Guid Id { get; set; }
         public string TableNumber { get; set; } = string.Empty;
+        public string Status { get; set; } = "Nuevo";
     }
 }
