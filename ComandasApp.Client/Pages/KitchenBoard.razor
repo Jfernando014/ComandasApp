@@ -5,36 +5,52 @@
 @inject HttpClient Http
 @implements IAsyncDisposable
 
-<PageTitle>Cocina - KDS Móvil</PageTitle>
+<PageTitle>Pedidos - Estado y Prioridad</PageTitle>
 
-<div class="bg-surface text-on-surface font-body min-h-screen flex flex-col antialiased">
+<div class="bg-surface text-on-surface font-body min-h-screen flex flex-col antialiased pb-24">
     <!-- TopAppBar -->
-    <header class="w-full top-0 sticky bg-surface-container-lowest shadow-sm flex justify-between items-center px-4 py-3 z-40 border-b border-surface-variant">
+    <header class="w-full top-0 sticky bg-surface-container-lowest shadow-sm flex flex-col px-4 py-4 z-40 border-b border-surface-variant gap-4">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">soup_kitchen</span>
+            <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
             </div>
             <div>
-                <h1 class="font-headline text-[20px] font-semibold text-primary leading-tight">Cocina en Vivo</h1>
-                <p class="font-label text-[12px] text-on-surface-variant flex items-center gap-1">
-                    @if (IsConnected)
-                    {
-                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                        <span>Sincronizado</span>
-                    }
-                    else
-                    {
-                        <span class="w-2 h-2 rounded-full bg-error"></span>
-                        <span>Desconectado</span>
-                    }
-                </p>
+                <h1 class="font-headline text-[22px] font-bold text-on-surface leading-tight">Pedidos</h1>
+                <p class="font-label text-[14px] text-on-surface-variant">Estado y Prioridad</p>
             </div>
+            <div class="ml-auto">
+                <button class="border border-outline px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-medium">
+                    <span class="material-symbols-outlined text-[18px]">filter_list</span> Filtrar
+                </button>
+            </div>
+        </div>
+
+        <!-- Pills / Tabs -->
+        <div class="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+            <button class="bg-surface-container-high text-on-surface px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap">
+                Todos (@orders.Count)
+            </button>
+            <button class="border border-outline text-on-surface-variant px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-primary"></span> Listo (@orders.Count(o => o.Status == "Listo"))
+            </button>
+            <button class="border border-outline text-on-surface-variant px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-orange-500"></span> Espera (@orders.Count(o => o.Status == "Preparando"))
+            </button>
+            <button class="border border-outline text-on-surface-variant px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-error"></span> Nuevos (@orders.Count(o => o.Status == "Nuevo"))
+            </button>
         </div>
     </header>
 
     <!-- Main Content -->
+    <!-- Main Content -->
     <main class="flex-grow p-4 overflow-y-auto space-y-6">
-        @if (orders.Count == 0)
+        @{
+            var pedidosActivos = orders.Where(o => o.Status == "Nuevo" || o.Status == "Preparando").ToList();
+            var pedidosRealizados = orders.Where(o => o.Status == "Listo").ToList();
+        }
+
+        @if (!orders.Any())
         {
             <div class="h-64 flex flex-col items-center justify-center text-center opacity-60">
                 <span class="material-symbols-outlined text-[64px] mb-4">check_circle</span>
@@ -44,63 +60,106 @@
         }
         else
         {
-            <!-- Sección: Nuevos Pedidos -->
-            var nuevosPedidos = orders.Where(o => o.Status == "Nuevo").ToList();
-            if (nuevosPedidos.Any())
+            @if (pedidosActivos.Any())
             {
                 <section>
-                    <h3 class="font-headline font-semibold text-on-surface mb-3 flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-error"></span>
-                        Recién Llegados (@nuevosPedidos.Count)
-                    </h3>
+                    <h2 class="font-headline text-[18px] font-bold text-on-surface mb-4">Pedidos Activos</h2>
                     <div class="space-y-4">
-                        @foreach (var order in nuevosPedidos)
+                        @foreach (var order in pedidosActivos)
                         {
-                            <div class="bg-surface-container-lowest rounded-xl border-l-4 border-l-error shadow-sm p-4 relative overflow-hidden">
-                                <div class="flex justify-between items-start mb-3">
-                                    <h4 class="font-headline text-[18px] font-bold">Mesa @order.TableNumber</h4>
-                                    <span class="bg-error-container text-on-error-container px-2 py-1 rounded-md text-[12px] font-semibold">URGENTE</span>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <div class="flex gap-2 items-start text-[14px]">
-                                        <span class="font-medium">1x</span>
-                                        <span>Hamburguesa (Ejemplo)</span>
+                            var isNuevo = order.Status == "Nuevo";
+                            var isPreparando = order.Status == "Preparando";
+                            
+                            var borderColor = isNuevo ? "border-l-error" : "border-l-orange-500";
+                            var timeBg = isNuevo ? "bg-error/10 text-error border-error/20" : "bg-orange-500/10 text-orange-600 border-orange-500/20";
+                            var elapsedMinutes = (int)(DateTime.UtcNow - order.CreatedAt).TotalMinutes;
+
+                            <div class="bg-surface-container-lowest rounded-2xl border-l-[6px] @borderColor shadow-sm p-4 relative border-y border-r border-surface-variant">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-headline text-[20px] font-bold text-on-surface">Mesa @order.TableNumber</h4>
+                                        <span class="text-on-surface-variant text-sm">#@order.Id.ToString().Substring(0,4).ToUpper()</span>
                                     </div>
-                                    <p class="text-[12px] text-outline italic">Sin cebolla, extra queso</p>
+                                    <div class="border @timeBg px-2 py-1 rounded-md text-[14px] font-semibold flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[16px]">schedule</span>
+                                        <span>@(elapsedMinutes)m</span>
+                                    </div>
                                 </div>
-                                <button class="w-full bg-error text-on-error py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-error/90 transition-colors" @onclick='() => CambiarEstado(order.Id, "Preparando")'>
-                                    <span class="material-symbols-outlined">skillet</span>
-                                    Comenzar a Preparar
-                                </button>
+
+                                <!-- Items -->
+                                <div class="space-y-3 mb-5 border-t border-surface-variant/50 pt-3">
+                                    @foreach(var item in order.Items)
+                                    {
+                                        <div class="flex justify-between items-start text-[15px]">
+                                            <div class="flex gap-2">
+                                                <span class="font-semibold text-on-surface-variant">@(item.Quantity)x</span>
+                                                <div>
+                                                    <span class="text-on-surface">@item.ProductName</span>
+                                                    @if(!string.IsNullOrEmpty(item.Notes)) {
+                                                        <p class="text-[13px] text-outline italic">@item.Notes</p>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <span class="font-medium text-on-surface">@item.UnitPrice.ToString("C0")</span>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Botones de Acción -->
+                                <div class="flex gap-3 justify-end items-center">
+                                    @if (isNuevo)
+                                    {
+                                        <button class="px-4 py-2 text-error font-medium border border-error/30 rounded-xl">Cancelar</button>
+                                        <button class="bg-error text-on-error px-6 py-2.5 rounded-xl font-medium shadow-sm active:scale-95 transition-transform" @onclick='() => CambiarEstado(order.Id, "Preparando")'>
+                                            Comenzar
+                                        </button>
+                                    }
+                                    else if (isPreparando)
+                                    {
+                                        <button class="bg-orange-500 text-white px-6 py-2.5 rounded-xl font-medium shadow-sm active:scale-95 transition-transform w-full sm:w-auto" @onclick='() => CambiarEstado(order.Id, "Listo")'>
+                                            Marcar Listo
+                                        </button>
+                                    }
+                                </div>
                             </div>
                         }
                     </div>
                 </section>
             }
 
-            <!-- Sección: En Preparación -->
-            var preparandoPedidos = orders.Where(o => o.Status == "Preparando").ToList();
-            if (preparandoPedidos.Any())
+            @if (pedidosRealizados.Any())
             {
-                <section>
-                    <h3 class="font-headline font-semibold text-on-surface mb-3 flex items-center gap-2 mt-6">
-                        <span class="w-3 h-3 rounded-full bg-primary"></span>
-                        En Preparación (@preparandoPedidos.Count)
-                    </h3>
+                <section class="@(pedidosActivos.Any() ? "mt-8" : "")">
+                    <h2 class="font-headline text-[18px] font-bold text-on-surface mb-4">Pedidos Realizados</h2>
                     <div class="space-y-4">
-                        @foreach (var order in preparandoPedidos)
+                        @foreach (var order in pedidosRealizados)
                         {
-                            <div class="bg-surface-container-lowest rounded-xl border-l-4 border-l-primary shadow-sm p-4 relative overflow-hidden">
-                                <div class="flex justify-between items-start mb-3">
-                                    <h4 class="font-headline text-[18px] font-bold">Mesa @order.TableNumber</h4>
-                                    <span class="bg-primary-container text-on-primary-container px-2 py-1 rounded-md text-[12px] font-semibold flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[14px] animate-spin">sync</span> Preparando
-                                    </span>
+                            <div class="bg-surface-container-lowest rounded-2xl border-l-[6px] border-l-[#42615c] shadow-sm p-4 relative border-y border-r border-surface-variant opacity-90">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-headline text-[20px] font-bold text-on-surface-variant">Mesa @order.TableNumber</h4>
+                                        <span class="text-outline text-sm">#@order.Id.ToString().Substring(0,4).ToUpper()</span>
+                                    </div>
+                                    <div class="bg-[#42615c] text-white px-3 py-1.5 rounded-lg text-[14px] font-semibold flex items-center gap-1 shadow-sm">
+                                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        <span>Listo</span>
+                                    </div>
                                 </div>
-                                <button class="w-full bg-primary text-on-primary py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-colors" @onclick='() => CambiarEstado(order.Id, "Listo")'>
-                                    <span class="material-symbols-outlined">done_all</span>
-                                    Marcar como Listo
-                                </button>
+
+                                <!-- Items Realizados (Tachados) -->
+                                <div class="space-y-3 border-t border-surface-variant/50 pt-3">
+                                    @foreach(var item in order.Items)
+                                    {
+                                        <div class="flex justify-between items-start text-[15px] text-on-surface-variant line-through decoration-on-surface-variant/50">
+                                            <div class="flex gap-2">
+                                                <span class="font-semibold opacity-70">@(item.Quantity)x</span>
+                                                <div>
+                                                    <span class="">@item.ProductName</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         }
                     </div>
@@ -113,53 +172,55 @@
 @code {
     private HubConnection? hubConnection;
     private List<OrderNotification> orders = new();
+    private System.Threading.Timer? _timer;
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. Cargar comandas activas previas desde GraphQL
         await CargarComandasActivas();
 
-        // 2. Conectar al Hub de SignalR
         hubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/orderhub"))
             .WithAutomaticReconnect()
             .Build();
 
-        hubConnection.On<Guid, string>("OrderCreated", (orderId, tableNumber) =>
+        hubConnection.On<Guid, string>("OrderCreated", async (orderId, tableNumber) =>
         {
-            // Solo agregar si no existe ya
-            if (!orders.Any(o => o.Id == orderId))
-            {
-                orders.Add(new OrderNotification { Id = orderId, TableNumber = tableNumber, Status = "Nuevo" });
-                InvokeAsync(StateHasChanged);
-            }
+            // Recargar todo para tener los items y fechas correctas
+            await CargarComandasActivas();
+            await InvokeAsync(StateHasChanged);
         });
 
-        hubConnection.On<Guid, string>("OrderStatusChanged", (orderId, status) =>
+        hubConnection.On<Guid, string>("OrderStatusChanged", async (orderId, status) =>
         {
             var order = orders.FirstOrDefault(o => o.Id == orderId);
             if (order != null)
             {
-                if (status == "Ready" || status == "Delivered")
+                if (status == "Delivered")
                 {
                     orders.Remove(order);
                 }
                 else
                 {
-                    order.Status = status == "Preparing" ? "Preparando" : status;
+                    order.Status = status == "Preparing" ? "Preparando" : (status == "Ready" ? "Listo" : status);
                 }
-                InvokeAsync(StateHasChanged);
+                await InvokeAsync(StateHasChanged);
             }
         });
 
         await hubConnection.StartAsync();
+
+        // Timer para actualizar el "minuto transcurrido" cada 30 segundos
+        _timer = new System.Threading.Timer(_ => 
+        {
+            InvokeAsync(StateHasChanged);
+        }, null, 0, 30000);
     }
 
     private async Task CargarComandasActivas()
     {
         try
         {
-            var request = new { query = "{ activeOrders { id tableNumber status } }" };
+            var request = new { query = "{ activeOrders { id tableNumber status createdAt items { quantity unitPrice notes product { name } } } }" };
             var response = await Http.PostAsJsonAsync("/graphql", request);
             
             if (response.IsSuccessStatusCode)
@@ -171,8 +232,15 @@
                     {
                         Id = o.Id,
                         TableNumber = o.TableNumber,
-                        Status = o.Status == "PENDING" ? "Nuevo" : (o.Status == "PREPARING" ? "Preparando" : "Listo")
-                    }).Where(o => o.Status == "Nuevo" || o.Status == "Preparando").ToList();
+                        Status = o.Status == "PENDING" ? "Nuevo" : (o.Status == "PREPARING" ? "Preparando" : "Listo"),
+                        CreatedAt = o.CreatedAt.ToUniversalTime(),
+                        Items = o.Items?.Select(i => new OrderItemNotification {
+                            Quantity = i.Quantity,
+                            UnitPrice = i.UnitPrice,
+                            Notes = i.Notes,
+                            ProductName = i.Product?.Name ?? "Producto Desconocido"
+                        }).ToList() ?? new List<OrderItemNotification>()
+                    }).OrderBy(o => o.CreatedAt).ToList();
                 }
             }
         }
@@ -184,19 +252,13 @@
 
     private async Task CambiarEstado(Guid orderId, string nuevoEstado)
     {
-        // Actualización optimista de UI
         var order = orders.FirstOrDefault(o => o.Id == orderId);
         if (order != null)
         {
-            if (nuevoEstado == "Listo")
-                orders.Remove(order);
-            else
-                order.Status = nuevoEstado;
-                
-            StateHasChanged(); // Forzar renderizado visual inmediato
+            order.Status = nuevoEstado;
+            StateHasChanged(); 
         }
 
-        // Enviar mutación GraphQL al Backend
         string graphqlStatus = nuevoEstado == "Preparando" ? "PREPARING" : "READY";
         
         var request = new
@@ -218,6 +280,7 @@
 
     public async ValueTask DisposeAsync()
     {
+        _timer?.Dispose();
         if (hubConnection is not null)
         {
             await hubConnection.DisposeAsync();
@@ -229,6 +292,16 @@
         public Guid Id { get; set; }
         public string TableNumber { get; set; } = string.Empty;
         public string Status { get; set; } = "Nuevo";
+        public DateTime CreatedAt { get; set; }
+        public List<OrderItemNotification> Items { get; set; } = new();
+    }
+
+    private class OrderItemNotification
+    {
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public string? Notes { get; set; }
+        public string ProductName { get; set; } = string.Empty;
     }
 
     private class GraphQLResponse
@@ -246,5 +319,20 @@
         public Guid Id { get; set; }
         public string TableNumber { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public List<OrderItemDto>? Items { get; set; }
+    }
+
+    private class OrderItemDto
+    {
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public string? Notes { get; set; }
+        public ProductDto? Product { get; set; }
+    }
+
+    private class ProductDto
+    {
+        public string Name { get; set; } = string.Empty;
     }
 }
