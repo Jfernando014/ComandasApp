@@ -1,3 +1,45 @@
 @inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager NavigationManager
 
 @Body
+
+<!-- BottomNavBar (Mobile Only) global -->
+<nav class="bg-surface text-primary font-label-sm text-label-sm fixed bottom-0 w-full rounded-t-xl z-50 shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe md:hidden">
+    <button @onclick='() => NavigationManager.NavigateTo("/kitchen")' class="flex flex-col items-center justify-center px-6 py-2 hover:bg-surface-container-high active:scale-90 transition-transform @(IsActive("/kitchen") ? "bg-secondary-container text-on-secondary-container rounded-full" : "text-on-secondary-fixed-variant")">
+        <span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+        <span class="mt-1">Pedidos</span>
+    </button>
+    <button @onclick='() => NavigationManager.NavigateTo("/")' class="flex flex-col items-center justify-center px-6 py-2 hover:bg-surface-container-high active:scale-90 transition-transform @(IsActive("/") ? "bg-secondary-container text-on-secondary-container rounded-full" : "text-on-secondary-fixed-variant")">
+        <span class="material-symbols-outlined" data-icon="table_restaurant">table_restaurant</span>
+        <span class="mt-1">Mesas</span>
+    </button>
+    <button class="flex flex-col items-center justify-center px-6 py-2 hover:bg-surface-container-high active:scale-90 transition-transform text-on-secondary-fixed-variant">
+        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+        <span class="mt-1">Alertas</span>
+    </button>
+</nav>
+
+@code {
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        StateHasChanged();
+    }
+
+    private bool IsActive(string href)
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        if (href == "/") return string.IsNullOrEmpty(relativePath);
+        return relativePath.StartsWith(href.TrimStart('/'), StringComparison.OrdinalIgnoreCase);
+    }
+    
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+}
