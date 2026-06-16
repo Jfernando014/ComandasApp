@@ -4,16 +4,18 @@
 <PageTitle>Más - ComandasApp</PageTitle>
 
 <div class="bg-surface text-on-surface font-body min-h-screen flex flex-col antialiased pb-24">
-    <!-- Header -->
-    <header class="w-full top-0 sticky bg-surface-container-lowest shadow-sm flex justify-between items-center px-4 py-4 z-40 border-b border-surface-variant">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+    <!-- TopAppBar -->
+    <header class="w-full top-0 sticky bg-surface shadow-sm flex justify-between items-center px-container-padding py-unit w-full max-w-full z-40">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden border border-outline-variant flex items-center justify-center text-on-surface-variant">
+                <span class="material-symbols-outlined" data-icon="person">person</span>
             </div>
-            <h1 class="font-headline text-[22px] font-bold text-primary leading-tight">ComandasApp</h1>
+            <div>
+                <h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">ComandasApp</h1>
+            </div>
         </div>
-        <button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-container-high rounded-full transition-colors">
-            <span class="material-symbols-outlined">settings</span>
+        <button aria-label="Search" class="text-primary hover:bg-surface-container-low transition-colors active:scale-95 duration-150 p-2 rounded-full flex items-center justify-center">
+            <span class="material-symbols-outlined" data-icon="search">settings</span>
         </button>
     </header>
 
