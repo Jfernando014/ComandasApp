@@ -14,9 +14,9 @@
         <span class="material-symbols-outlined" data-icon="table_restaurant">table_restaurant</span>
         <span class="mt-1">Mesas</span>
     </button>
-    <button class="flex flex-col items-center justify-center px-6 py-2 hover:bg-surface-container-high active:scale-90 transition-transform text-on-secondary-fixed-variant">
-        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-        <span class="mt-1">Alertas</span>
+    <button @onclick='() => NavigationManager.NavigateTo("/more")' class="flex flex-col items-center justify-center px-6 py-2 hover:bg-surface-container-high active:scale-90 transition-transform @(IsActive("/more") ? "bg-secondary-container text-on-secondary-container rounded-full" : "text-on-secondary-fixed-variant")">
+        <span class="material-symbols-outlined" data-icon="menu">menu</span>
+        <span class="mt-1">Más</span>
     </button>
 </nav>
 
