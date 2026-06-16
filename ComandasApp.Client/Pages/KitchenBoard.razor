@@ -2,6 +2,7 @@
 @layout ComandasApp.Client.Layout.EmptyLayout
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
+@inject HttpClient Http
 @implements IAsyncDisposable
 
 <PageTitle>Cocina - KDS Móvil</PageTitle>
@@ -115,6 +116,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // 1. Cargar comandas activas previas desde GraphQL
+        await CargarComandasActivas();
+
+        // 2. Conectar al Hub de SignalR
         hubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/orderhub"))
             .WithAutomaticReconnect()
@@ -122,8 +127,12 @@
 
         hubConnection.On<Guid, string>("OrderCreated", (orderId, tableNumber) =>
         {
-            orders.Add(new OrderNotification { Id = orderId, TableNumber = tableNumber, Status = "Nuevo" });
-            InvokeAsync(StateHasChanged);
+            // Solo agregar si no existe ya
+            if (!orders.Any(o => o.Id == orderId))
+            {
+                orders.Add(new OrderNotification { Id = orderId, TableNumber = tableNumber, Status = "Nuevo" });
+                InvokeAsync(StateHasChanged);
+            }
         });
 
         hubConnection.On<Guid, string>("OrderStatusChanged", (orderId, status) =>
@@ -137,7 +146,7 @@
                 }
                 else
                 {
-                    order.Status = status;
+                    order.Status = status == "Preparing" ? "Preparando" : status;
                 }
                 InvokeAsync(StateHasChanged);
             }
@@ -146,20 +155,62 @@
         await hubConnection.StartAsync();
     }
 
-    private void CambiarEstado(Guid orderId, string nuevoEstado)
+    private async Task CargarComandasActivas()
     {
-        // Mutación GraphQL simulada - Actualización Local por ahora
+        try
+        {
+            var request = new { query = "{ activeOrders { id tableNumber status } }" };
+            var response = await Http.PostAsJsonAsync("/graphql", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<GraphQLResponse>();
+                if (result?.Data?.ActiveOrders != null)
+                {
+                    orders = result.Data.ActiveOrders.Select(o => new OrderNotification
+                    {
+                        Id = o.Id,
+                        TableNumber = o.TableNumber,
+                        Status = o.Status == "PENDING" ? "Nuevo" : (o.Status == "PREPARING" ? "Preparando" : "Listo")
+                    }).Where(o => o.Status == "Nuevo" || o.Status == "Preparando").ToList();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cargando ordenes: {ex.Message}");
+        }
+    }
+
+    private async Task CambiarEstado(Guid orderId, string nuevoEstado)
+    {
+        // Actualización optimista de UI
         var order = orders.FirstOrDefault(o => o.Id == orderId);
         if (order != null)
         {
             if (nuevoEstado == "Listo")
-            {
-                orders.Remove(order); // Desaparece del tablero cuando está listo
-            }
+                orders.Remove(order);
             else
-            {
                 order.Status = nuevoEstado;
-            }
+                
+            StateHasChanged(); // Forzar renderizado visual inmediato
+        }
+
+        // Enviar mutación GraphQL al Backend
+        string graphqlStatus = nuevoEstado == "Preparando" ? "PREPARING" : "READY";
+        
+        var request = new
+        {
+            query = $"mutation {{ updateOrderStatus(orderId: \"{orderId}\", newStatus: {graphqlStatus}) }}"
+        };
+
+        try
+        {
+            await Http.PostAsJsonAsync("/graphql", request);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error actualizando estado: {ex.Message}");
         }
     }
 
@@ -178,5 +229,22 @@
         public Guid Id { get; set; }
         public string TableNumber { get; set; } = string.Empty;
         public string Status { get; set; } = "Nuevo";
+    }
+
+    private class GraphQLResponse
+    {
+        public GraphQLData? Data { get; set; }
+    }
+
+    private class GraphQLData
+    {
+        public List<OrderDto>? ActiveOrders { get; set; }
+    }
+
+    private class OrderDto
+    {
+        public Guid Id { get; set; }
+        public string TableNumber { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
     }
 }
